@@ -57,12 +57,6 @@ Make sure your website loads on 70 port with a sample website template.
 
 
 
-
-
-
-
-
-
 docker pull nginx
 docker run --name temp_nginx -d nginx
 docker cp temp_nginx:/etc/nginx/nginx.conf
