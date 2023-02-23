@@ -71,3 +71,441 @@ server {
 
 https://prnt.sc/LuN7M7rTCFiZ
 https://prnt.sc/o59_uLpFqR5n
+
+
+
+Task 5)  ====>  Run a nginx container and publish any port to the outside world, similarly run a httpd container with a website template and publish any port to the outside world.
+ Make sure that the both nginx and apache is running. Spin up a haproxy container and route the traffic to these containers. (refer docker hub for ha-proxy to know how this can be run)
+
+
+
+[ec2-user@ip-172-31-27-59 ~]$ docker network create my-network
+111b409cae0bbb1fb88de12b1fdc6adbc28ea5caebd48d0210ff1362a2d71aa2
+[ec2-user@ip-172-31-27-59 ~]$ mkdir nginxx
+[ec2-user@ip-172-31-27-59 ~]$ mkdir httpdd
+[ec2-user@ip-172-31-27-59 ~]$ echo "Hello from Nginx" > nginxx/index.html
+[ec2-user@ip-172-31-27-59 ~]$ echo "Hello from HTTPD" > httpdd/index.html
+
+[ec2-user@ip-172-31-27-59 ~]$ docker run --name httpd --network my-network -v $(pwd)/httpdd:/usr/local/apache2/htdocs/ -d httpd
+483fe08f79ea0b7cb59a901616b21b3445c4e6899b8611ddca3c4aad97fa824c
+[ec2-user@ip-172-31-27-59 ~]$ docker run --name nginx --network my-network -v $(pwd)/nginxx:/usr/share/nginx/html:ro -d nginx
+bb97db2a243eb29ae676c1bff62234ffa2b86cfe14e9e54c722d2325be1b93dc
+[ec2-user@ip-172-31-27-59 ~]$ docker run -d --name haproxy --network my-network -p 80:80 -v $(pwd)/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro haproxy:alpine
+0d9edb9a5efc4d2f65771ad8cf78321ebc7fa058cde4a98dd3f5490c22929b42
+[ec2-user@ip-172-31-27-59 ~]$ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+https://prnt.sc/zsEjgeqeboR7
+https://prnt.sc/_ehtDMXfkreQ
+
+
+Task 6
+==========
+
+Create a docker image with centos as base image, Install httpd and copy the sample website content template to the root directory.Set the "MAINTAINER" directive with your name.
+
+
+[ec2-user@ip-172-31-27-59 ~]$ mkdir shalom 
+[ec2-user@ip-172-31-27-59 ~]$ cd shalom
+[ec2-user@ip-172-31-27-59 shalom]$ vi Dockerfile
+FROM centos:7
+
+RUN yum update -y && yum install httpd httpd-tools -y
+
+COPY index.html /var/www/html/
+
+MAINTAINER midhun
+
+EXPOSE 80
+
+CMD     ["/usr/sbin/httpd","-D","FOREGROUND"]
+
+[ec2-user@ip-172-31-27-59 shalom]$ vi index.html
+
+
+<!doctype html>
+<html>
+  <head>
+    <title>This is the title of the webpage!</title>
+  </head>
+  <body>
+    <p>This is an example paragraph. Anything in the <strong>body</strong> tag will appear on the page, just like this <strong>p</strong> tag and its contents.</p>
+  </body>
+</html>
+
+[ec2-user@ip-172-31-27-59 shalom]$ docker build -t shalom .
+[ec2-user@ip-172-31-27-59 shalom]$ docker run -itd -p 80:80 shalom
+
+
+https://prnt.sc/Iwo7quUlSfWk
+
+Task 7
+==========
+Create your own custom Docker image with nginx container with a "indexfile" having your name and push this image to your dockerhub registry with a tag version 1.
+Similarly, create a custom Docker image with nginx with a sample 'website template' and push this image to the dockerhub registry and tag this image with the name version 2 as well as 'latest' along with this image.
+Share the dockerhub pull command for this image and deploy the image and make sure it works
+
+
+
+
+
+[ec2-user@ip-172-31-27-59 ~]$ mkdir my-nginx-image
+[ec2-user@ip-172-31-27-59 ~]$ cd my-nginx-image
+[ec2-user@ip-172-31-27-59 my-nginx-image]$ echo "midhun" > index.html
+[ec2-user@ip-172-31-27-59 my-nginx-image]$ touch Dockerfile
+
+add below lines in the Dockerfile  file. 
+
+FROM nginx
+COPY index.html /usr/share/nginx/html
+
+log into the dockerhub  
+
+docker login -u midhungk 
+
+[ec2-user@ip-172-31-27-59 my-nginx-image]$ docker login -u midhungk
+Password: 
+WARNING! Your password will be stored unencrypted in /home/ec2-user/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+
+Login Succeeded
+
+[ec2-user@ip-172-31-27-59 my-nginx-image]$ docker push midhungk/my-nginx-image:1
+
+[ec2-user@ip-172-31-27-59 ~]$ mkdir my-nginx-website
+[ec2-user@ip-172-31-27-59 ~]$ cd my-nginx-website
+[ec2-user@ip-172-31-27-59 my-nginx-website]$ wget https://www.free-css.com/assets/files/free-css-templates/download/page287/covido.zip
+[ec2-user@ip-172-31-27-59 my-nginx-website]$ touch Dockerfile
+[ec2-user@ip-172-31-27-59 my-nginx-website]$ vi Dockerfile 
+
+
+add below lines in the Dockerfile  file. 
+
+FROM nginx
+COPY index.html /usr/share/nginx/html
+
+[ec2-user@ip-172-31-27-59 my-nginx-website]$ docker login -u midhungk
+Password: 
+WARNING! Your password will be stored unencrypted in /home/ec2-user/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+
+Login Succeeded
+
+
+[ec2-user@ip-172-31-27-59 my-nginx-website]$ docker build -t midhungk/my-nginx-website:2 -t midhungk/my-nginx-website:latest .
+
+[ec2-user@ip-172-31-27-59 my-nginx-website]$ docker push midhungk/my-nginx-website:2
+[ec2-user@ip-172-31-27-59 my-nginx-website]$ docker push midhungk/my-nginx-website:latest
+
+[ec2-user@ip-172-31-27-59 my-nginx-website]$ docker run -p 80:80 -d midhungk/my-nginx-website:latest
+4cf0e64469b97985d6fb2c7d70b703711fd9479304e778b1ffcb2c1e9f79785d
+
+docker push images.  
+
+
+https://prnt.sc/y2QdlT7DPvQE
+
+
+website running. 
+
+
+https://prnt.sc/40SHqIQct9Pr
+
+
+
+
+
+[ec2-user@ip-172-31-27-59 my-nginx-website]$ docker pull midhungk/my-nginx-image:1
+1: Pulling from midhungk/my-nginx-image
+Digest: sha256:5078147c0c86b56e4714eafe38c9d986470abff91aed9e320de16b369552c5f1
+Status: Image is up to date for midhungk/my-nginx-image:1
+docker.io/midhungk/my-nginx-image:1
+[ec2-user@ip-172-31-27-59 my-nginx-website]$ docker pull midhungk/my-nginx-website:latest
+latest: Pulling from midhungk/my-nginx-website
+Digest: sha256:13e60868bd85b3a2d16b96f0fe37745bd3a6293f953d75817f2faed2307d0fe9
+Status: Image is up to date for midhungk/my-nginx-website:latest
+docker.io/midhungk/my-nginx-website:latest
+[ec2-user@ip-172-31-27-59 my-nginx-website]$ 
+
+
+
+
+
+
+
+Task-8
+===========
+With docker-compose, run multple containers as a single service
+
+1.)  An apache container, with the name 'my-website-1'. It should have a sample website bind mount to its root directory. The port to be exposed outside is 80
+2.)  An nginx container, with the name 'my-website-2'. It should have a volume mounted to its root directory.The port to be exposed is 8080 (the nginx default index file should changed to "mynginx-your name")
+3.)  A tomcat container. with the name 'my-website-3'. The port to be exposed is 8090
+
+
+
+
+
+
+[ec2-user@ip-172-31-27-59 ~]$ vi docker-compose.yml
+
+version: '3'
+
+services:
+  my-website-1:
+    image: httpd:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./sample-website:/usr/local/apache2/htdocs/
+      
+  my-website-2:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./mynginx:/usr/share/nginx/html/
+      
+  my-website-3:
+    image: tomcat:latest
+    ports:
+      - "8090:8080"
+
+
+[ec2-user@ip-172-31-27-59 ~]$ docker compose -f docker-compose.yml config
+name: ec2-user
+services:
+  my-website-1:
+    image: httpd:latest
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 80
+      published: "80"
+      protocol: tcp
+    volumes:
+    - type: bind
+      source: /home/ec2-user/sample-website
+      target: /usr/local/apache2/htdocs
+      bind:
+        create_host_path: true
+  my-website-2:
+    image: nginx:latest
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 80
+      published: "8080"
+      protocol: tcp
+    volumes:
+    - type: bind
+      source: /home/ec2-user/mynginx
+      target: /usr/share/nginx/html
+      bind:
+        create_host_path: true
+  my-website-3:
+    image: tomcat:latest
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 8080
+      published: "8090"
+      protocol: tcp
+networks:
+  default:
+    name: ec2-user_default
+[ec2-user@ip-172-31-27-59 ~]$ 
+
+
+
+[ec2-user@ip-172-31-27-59 ~]$ docker compose up -d
+[+] Running 8/8
+ ⠿ my-website-3 Pulled                                                                                                                                  13.9s
+   ⠿ 10ac4908093d Pull complete                                                                                                                          4.9s
+   ⠿ 6df15e605e38 Pull complete                                                                                                                          6.5s
+   ⠿ 2db012dd504c Pull complete                                                                                                                         11.8s
+   ⠿ 8fa912900627 Pull complete                                                                                                                         11.9s
+   ⠿ f8fe20946c04 Pull complete                                                                                                                         12.0s
+   ⠿ 8093daf900d2 Pull complete                                                                                                                         12.6s
+   ⠿ 49c22a329043 Pull complete                                                                                                                         12.6s
+[+] Running 4/4
+ ⠿ Network ec2-user_default           Created                                                                                                            0.1s
+ ⠿ Container ec2-user-my-website-2-1  Started                                                                                                            2.0s
+ ⠿ Container ec2-user-my-website-3-1  Started                                                                                                            2.0s
+ ⠿ Container ec2-user-my-website-1-1  Started                                                                                                            1.9s
+[ec2-user@ip-172-31-27-59 ~]$
+
+[ec2-user@ip-172-31-27-59 ~]$ docker compose ps
+NAME                      IMAGE               COMMAND                  SERVICE             CREATED             STATUS              PORTS
+ec2-user-my-website-1-1   httpd:latest        "httpd-foreground"       my-website-1        3 minutes ago       Up 3 minutes        0.0.0.0:80->80/tcp, :::80->80/tcp
+ec2-user-my-website-2-1   nginx:latest        "/docker-entrypoint.…"   my-website-2        3 minutes ago       Up 3 minutes        0.0.0.0:8080->80/tcp, :::8080->80/tcp
+ec2-user-my-website-3-1   tomcat:latest       "catalina.sh run"        my-website-3        3 minutes ago       Up 3 minutes        0.0.0.0:8090->8080/tcp, :::8090->8080/tcp
+[ec2-user@ip-172-31-27-59 ~]$ docker compose down -v
+[+] Running 4/4
+ ⠿ Container ec2-user-my-website-3-1  Removed                                                                                                            0.3s
+ ⠿ Container ec2-user-my-website-1-1  Removed                                                                                                            1.1s
+ ⠿ Container ec2-user-my-website-2-1  Removed                                                                                                            0.2s
+ ⠿ Network ec2-user_default           Removed                                                                                                            0.0s
+[ec2-user@ip-172-31-27-59 ~]$ docker compose ps
+NAME                IMAGE               COMMAND             SERVICE             CREATED             STATUS              PORTS
+[ec2-user@ip-172-31-27-59 ~]$ 
+
+
+
+
+
+
+
+
+Task 9
+==================
+
+With the help of docker-compose spin up a wordpress+phpmyadmin+database containers running as a service with seperate volume for mysql as well as for wordpress.
+Make sure all the three services are running fine.(phpmyadmin should accessible via public and make sure you can manage db via it)
+
+
+[ec2-user@ip-172-31-27-59 ~]$ mkdir my-wordpress-app
+[ec2-user@ip-172-31-27-59 ~]$ cd my-wordpress-app
+[ec2-user@ip-172-31-27-59 my-wordpress-app]$ touch docker-compose.yml
+[ec2-user@ip-172-31-27-59 my-wordpress-app]$ vi docker-compose.yml 
+[ec2-user@ip-172-31-27-59 my-wordpress-app]$ docker-compose up -d
+-bash: docker-compose: command not found
+[ec2-user@ip-172-31-27-59 my-wordpress-app]$ docker compose up -d
+[+] Running 53/21
+ ⠿ db Pulled                                                                                                                                            45.8s
+ ⠿ wordpress Pulled                                                                                                                                     47.5s
+ ⠿ phpmyadmin Pulled                                                                                                                                    45.6s
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+                                                                                                                                                              
+[+] Running 6/6
+ ⠿ Network my-wordpress-app_default         Created                                                                                                      0.1s
+ ⠿ Volume "my-wordpress-app_wp_data"        Created                                                                                                      0.0s
+ ⠿ Volume "my-wordpress-app_db_data"        Created                                                                                                      0.0s
+ ⠿ Container my-wordpress-app-db-1          Started                                                                                                      0.9s
+ ⠿ Container my-wordpress-app-phpmyadmin-1  Started                                                                                                      2.4s
+ ⠿ Container my-wordpress-app-wordpress-1   Started                                                                                                      2.4s
+[ec2-user@ip-172-31-27-59 my-wordpress-app]$ 
+
+[ec2-user@ip-172-31-27-59 my-wordpress-app]$ docker compose ps
+NAME                            IMAGE                   COMMAND                  SERVICE             CREATED             STATUS              PORTS
+my-wordpress-app-db-1           mysql:5.7               "docker-entrypoint.s…"   db                  3 minutes ago       Up 3 minutes        3306/tcp, 33060/tcp
+my-wordpress-app-phpmyadmin-1   phpmyadmin/phpmyadmin   "/docker-entrypoint.…"   phpmyadmin          3 minutes ago       Up 3 minutes        0.0.0.0:8080->80/tcp, :::8080->80/tcp
+my-wordpress-app-wordpress-1    wordpress:latest        "docker-entrypoint.s…"   wordpress           3 minutes ago       Up 3 minutes        0.0.0.0:80->80/tcp, :::80->80/tcp
+[ec2-user@ip-172-31-27-59 my-wordpress-app]$ 
+
+
+
+[ec2-user@ip-172-31-27-59 my-wordpress-app]$ cat docker-compose.yml 
+version: '3.9'
+
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: qwertyuiop
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: midhun
+
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:latest
+    volumes:
+      - wp_data:/var/www/html
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: midhun
+      WORDPRESS_DB_NAME: wordpress
+
+  phpmyadmin:
+    depends_on:
+      - db
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: qwertyuiop
+
+volumes:
+  db_data:
+  wp_data:
+[ec2-user@ip-172-31-27-59 my-wordpress-app]$ 
+
+
+
+
+[ec2-user@ip-172-31-27-59 my-wordpress-app]$ docker compose down 
+[+] Running 4/4
+ ⠿ Container my-wordpress-app-phpmyadmin-1  Removed                                                                                                      1.4s
+ ⠿ Container my-wordpress-app-wordpress-1   Removed                                                                                                      1.4s
+ ⠿ Container my-wordpress-app-db-1          Removed                                                                                                      2.0s
+ ⠿ Network my-wordpress-app_default         Removed                                                                                                      0.1s
+[ec2-user@ip-172-31-27-59 my-wordpress-app]$ docker compose down -v
+[+] Running 2/2
+ ⠿ Volume my-wordpress-app_db_data  Removed                                                                                                              0.0s
+ ⠿ Volume my-wordpress-app_wp_data  Removed                                                                                                              0.1s
+[ec2-user@ip-172-31-27-59 my-wordpress-app]$ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+https://prnt.sc/A5llHCeoBjBv
+https://prnt.sc/tm6IliQ1rdEL
+
+
+
+
